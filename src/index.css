@@ -1,0 +1,266 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 210 24% 16%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 24% 16%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 24% 16%;
+
+    --primary: 197 100% 31%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 17% 95%;
+    --secondary-foreground: 210 24% 16%;
+
+    --muted: 210 17% 95%;
+    --muted-foreground: 210 16% 46%;
+
+    --accent: 46 100% 50%;
+    --accent-foreground: 210 24% 16%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 17% 89%;
+    --input: 210 17% 89%;
+    --ring: 197 100% 31%;
+
+    --radius: 0.75rem;
+
+    /* Custom design tokens for commercial real estate */
+    --solar-primary: 46 100% 50%;
+    --solar-secondary: 45 93% 47%;
+    --esg-green: 142 71% 45%;
+    --commercial-blue: 197 100% 31%;
+    --commercial-navy: 210 24% 16%;
+    --investor-gray: 210 16% 46%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--commercial-blue)), hsl(var(--primary)));
+    --gradient-solar: linear-gradient(135deg, hsl(var(--solar-primary)), hsl(var(--solar-secondary)));
+    --gradient-esg: linear-gradient(135deg, hsl(var(--esg-green)), hsl(var(--commercial-blue)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--commercial-navy) / 0.95), hsl(var(--commercial-blue) / 0.9));
+    --gradient-subtle: linear-gradient(180deg, hsl(220 30% 12%), hsl(220 25% 18%));
+    --gradient-vibrant: linear-gradient(135deg, hsl(270 60% 15%), hsl(310 50% 20%));
+    --gradient-warm: linear-gradient(135deg, hsl(25 70% 15%), hsl(35 60% 20%));
+    --gradient-cool: linear-gradient(135deg, hsl(200 60% 15%), hsl(220 50% 20%));
+    --gradient-radial: radial-gradient(circle at top right, hsl(270 50% 20%), hsl(220 40% 12%));
+    --gradient-mesh: radial-gradient(at 40% 20%, hsl(260 60% 15%) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, hsl(200 50% 18%) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, hsl(142 40% 15%) 0px, transparent 50%),
+                     linear-gradient(to bottom, hsl(220 30% 10%), hsl(220 25% 15%));
+    --gradient-section-1: linear-gradient(135deg, hsl(240 40% 12%), hsl(260 50% 18%), hsl(240 35% 15%));
+    --gradient-section-2: linear-gradient(135deg, hsl(200 45% 14%), hsl(180 40% 18%));
+    --gradient-section-3: linear-gradient(135deg, hsl(25 60% 15%), hsl(35 50% 20%));
+    --gradient-section-4: linear-gradient(135deg, hsl(142 40% 15%), hsl(160 45% 18%));
+    
+    /* Shadows */
+    --shadow-soft: 0 4px 20px hsl(var(--commercial-blue) / 0.1);
+    --shadow-medium: 0 8px 30px hsl(var(--commercial-blue) / 0.15);
+    --shadow-strong: 0 12px 40px hsl(var(--commercial-blue) / 0.2);
+    
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 210 24% 16%;
+    --foreground: 0 0% 100%;
+
+    --card: 210 20% 20%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 210 20% 20%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 197 100% 31%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 25%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 210 20% 25%;
+    --muted-foreground: 210 15% 65%;
+
+    --accent: 46 100% 50%;
+    --accent-foreground: 210 24% 16%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 25%;
+    --input: 210 20% 25%;
+    --ring: 197 100% 31%;
+
+    /* Dark mode gradients - enhanced */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--commercial-blue)), hsl(var(--primary)));
+    --gradient-solar: linear-gradient(135deg, hsl(var(--solar-primary)), hsl(var(--solar-secondary)));
+    --gradient-esg: linear-gradient(135deg, hsl(var(--esg-green)), hsl(var(--commercial-blue)));
+    --gradient-hero: linear-gradient(135deg, hsl(var(--commercial-navy)), hsl(var(--commercial-blue) / 0.8));
+    --gradient-section-1: linear-gradient(135deg, hsl(240 50% 10%), hsl(260 60% 15%), hsl(240 45% 12%));
+    --gradient-section-2: linear-gradient(135deg, hsl(200 55% 12%), hsl(180 50% 16%));
+    --gradient-section-3: linear-gradient(135deg, hsl(25 70% 12%), hsl(35 60% 18%));
+    --gradient-section-4: linear-gradient(135deg, hsl(142 50% 12%), hsl(160 55% 16%));
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .gradient-primary {
+    background: var(--gradient-primary);
+  }
+
+  .gradient-solar {
+    background: var(--gradient-solar);
+  }
+
+  .gradient-esg {
+    background: var(--gradient-esg);
+  }
+
+  .gradient-hero {
+    background: var(--gradient-hero);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-medium {
+    box-shadow: var(--shadow-medium);
+  }
+
+  .shadow-strong {
+    box-shadow: var(--shadow-strong);
+  }
+
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+
+  .text-solar {
+    color: hsl(var(--solar-primary));
+  }
+
+  .text-esg {
+    color: hsl(var(--esg-green));
+  }
+
+  .text-commercial {
+    color: hsl(var(--commercial-blue));
+  }
+
+  .bg-solar {
+    background-color: hsl(var(--solar-primary));
+  }
+
+  .bg-esg {
+    background-color: hsl(var(--esg-green));
+  }
+
+  .bg-commercial {
+    background-color: hsl(var(--commercial-blue));
+  }
+
+  .gradient-subtle {
+    background: var(--gradient-subtle);
+  }
+
+  .gradient-vibrant {
+    background: var(--gradient-vibrant);
+  }
+
+  .gradient-warm {
+    background: var(--gradient-warm);
+  }
+
+  .gradient-cool {
+    background: var(--gradient-cool);
+  }
+
+  .gradient-radial {
+    background: var(--gradient-radial);
+  }
+
+  .gradient-mesh {
+    background: var(--gradient-mesh);
+  }
+
+  .bg-gradient-section-1 {
+    background: var(--gradient-section-1);
+  }
+
+  .bg-gradient-section-2 {
+    background: var(--gradient-section-2);
+  }
+
+  .bg-gradient-section-3 {
+    background: var(--gradient-section-3);
+  }
+
+  .bg-gradient-section-4 {
+    background: var(--gradient-section-4);
+  }
+
+  .hover-scale {
+    transition: transform 0.3s ease;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+}
