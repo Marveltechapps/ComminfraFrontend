@@ -11,14 +11,37 @@ import { useToast } from "@/hooks/use-toast";
 import { Building2, Mail, Phone, MapPin, User, TrendingUp, Calendar, MessageSquare, ArrowRight, Clock, Loader2 } from "lucide-react";
 import heroImage from "@/assets/contact-hero-wood-blocks.jpg";
 
-// API Base URL - Auto-detect: Use localhost in development, remote in production
-// For local testing: Uses http://localhost:5000 (has CORS fixed)
-// For production: Uses http://13.232.229.226:5000 (needs CORS fix deployed)
-// Override: Set VITE_API_URL in .env file
-const API_BASE_URL = import.meta.env.VITE_API_URL || 
-  (import.meta.env.DEV 
-    ? "http://localhost:5000"  // Local backend (CORS fixed) for development
-    : "http://13.232.229.226:5000");  // Remote backend for production
+// API Base URL - Dynamic configuration
+// Priority: 1. VITE_API_URL env variable, 2. Auto-detect from window location, 3. Fallback
+const getApiBaseUrl = () => {
+  // Check environment variable first (highest priority)
+  if (import.meta.env.VITE_API_URL) {
+    const url = String(import.meta.env.VITE_API_URL).replace(/\/$/, '');
+    return url;
+  }
+
+  // Auto-detect from current window location (dynamic IP detection)
+  if (typeof window !== 'undefined') {
+    const currentHost = window.location.hostname;
+    const currentProtocol = window.location.protocol;
+
+    // If running on localhost, use localhost backend
+    if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+      return `${currentProtocol}//${currentHost}:5000`;
+    }
+
+    // If running on remote IP, use same IP for backend (dynamic)
+    const backendPort = import.meta.env.VITE_BACKEND_PORT || '5000';
+    return `${currentProtocol}//${currentHost}:${backendPort}`;
+  }
+
+  // Fallback: dev → localhost, prod → backend IP
+  return import.meta.env.DEV
+    ? "http://localhost:5000"
+    : "http://13.232.113.79:5000";
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const ContactPage = () => {
   const location = useLocation();
@@ -65,40 +88,113 @@ const ContactPage = () => {
       return;
     }
 
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a valid email address",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
       const requestBody = {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        inquiryType: formData.inquiryType,
-        message: formData.message,
+        name: formData.name.trim() || undefined,
+        email: formData.email.trim(),
+        phone: formData.phone.trim() || undefined,
+        inquiryType: formData.inquiryType || undefined,
+        message: formData.message.trim() || undefined,
         subject: formData.inquiryType || "Contact Form Inquiry"
       };
+
+      // Remove undefined fields to keep request clean
+      Object.keys(requestBody).forEach(key => {
+        if (requestBody[key as keyof typeof requestBody] === undefined) {
+          delete requestBody[key as keyof typeof requestBody];
+        }
+      });
 
       console.log("📤 Sending contact form to:", `${API_BASE_URL}/api/contact/submit`);
       console.log("📦 Request body:", requestBody);
 
-      const response = await fetch(`${API_BASE_URL}/api/contact/submit`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestBody),
-      });
+      // Create AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+      let response: Response;
+      try {
+        response = await fetch(`${API_BASE_URL}/api/contact/submit`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+      } catch (fetchError) {
+        clearTimeout(timeoutId);
+        if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+          throw new Error("Request timeout. The server took too long to respond. Please try again.");
+        }
+        throw fetchError;
+      }
 
       console.log("📥 Response status:", response.status, response.statusText);
-      const data = await response.json();
+      
+      type ResponseData = { 
+        success?: boolean; 
+        message?: string; 
+        error?: string;
+        errorCode?: string;
+        errors?: Array<{ field: string; message: string }>;
+        debug?: any;
+      };
+      
+      let data: ResponseData = {};
+      
+      try {
+        const text = await response.text();
+        if (text) {
+          data = JSON.parse(text) as ResponseData;
+        }
+      } catch (parseError) {
+        console.error("❌ Failed to parse response:", parseError);
+        // If response is not JSON, try to get status text
+        data = { 
+          message: response.statusText || "Invalid response from server",
+          error: `Server returned status ${response.status}`
+        };
+      }
+      
       console.log("📥 Response data:", data);
+      
+      // Log error details if present
+      if (data.error) {
+        console.error("📥 Backend error details:", data.error);
+      }
+      if (data.debug && import.meta.env.DEV) {
+        console.error("📥 Debug info:", data.debug);
+      }
 
       if (response.ok && data.success) {
-        toast({
-          title: "Message Sent Successfully!",
-          description: "Thank you for contacting us. We'll get back to you within 24 hours.",
-        });
-        
-        // Reset form
+        // Check if email failed but form was still received
+        if (data.emailStatus && !data.emailStatus.sent) {
+          toast({
+            title: "Message Received!",
+            description: data.message || "Your message was received successfully. Email notification failed but we have your information.",
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Message Sent Successfully!",
+            description: "Thank you for contacting us. We'll get back to you within 24 hours.",
+          });
+        }
         setFormData({
           name: "",
           email: "",
@@ -107,14 +203,98 @@ const ContactPage = () => {
           message: ""
         });
       } else {
-        throw new Error(data.message || "Failed to send message");
+        // Handle validation errors (400)
+        if (response.status === 400 && data.errors && Array.isArray(data.errors)) {
+          const errorMessages = data.errors.map((err: { field: string; message: string }) => 
+            `${err.field}: ${err.message}`
+          ).join(", ");
+          toast({
+            title: "Validation Error",
+            description: errorMessages || data.message || "Please check your input and try again.",
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Handle service unavailable (503) - email service issues
+        if (response.status === 503) {
+          const errorMsg = data.message || data.error || "Email service is temporarily unavailable. Please try again later or contact us directly.";
+          toast({
+            title: "Service Unavailable",
+            description: errorMsg,
+            variant: "destructive"
+          });
+          return;
+        }
+
+        // Handle server errors (500)
+        if (response.status >= 500) {
+          // Build comprehensive error message
+          let errorMsg = data.message || data.error || "Server error occurred. Please try again later or contact support.";
+          
+          // If we have error details, append them for better debugging
+          if (data.error && data.error !== data.message) {
+            errorMsg = `${data.message || 'Server error'}. ${data.error}`;
+          }
+          
+          // Include error code if available
+          if (data.errorCode) {
+            console.error("❌ Error code:", data.errorCode);
+          }
+          
+          // In development, show debug info
+          if (data.debug && import.meta.env.DEV) {
+            console.error("❌ Debug info:", data.debug);
+            errorMsg += ` (Error: ${data.debug.errorMessage || data.debug.errorCode || 'Unknown'})`;
+          }
+          
+          console.error("❌ Server error:", errorMsg);
+          console.error("❌ Full error data:", data);
+          
+          toast({
+            title: "Server Error",
+            description: errorMsg,
+            variant: "destructive",
+            duration: 10000 // Show for 10 seconds so user can read it
+          });
+          return;
+        }
+
+        // Generic error handling
+        const errorMsg = data.message || data.error || `Request failed with status ${response.status}`;
+        console.error("❌ Backend returned error:", errorMsg);
+        toast({
+          title: "Error",
+          description: errorMsg,
+          variant: "destructive"
+        });
       }
     } catch (error) {
-      console.error("Contact form submission error:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to send message. Please try again later.",
-        variant: "destructive"
+      console.error("❌ Contact form submission error:", error);
+      
+      let errorTitle = "Error";
+      let errorDescription = "Failed to send message. Please try again later.";
+
+      if (error instanceof TypeError && error.message === "Failed to fetch") {
+        // Network error - can't reach backend
+        errorTitle = "Connection Error";
+        errorDescription = "Cannot connect to server. Please check your internet connection and try again.";
+      } else if (error instanceof Error) {
+        if (error.message.includes("timeout")) {
+          errorTitle = "Request Timeout";
+          errorDescription = error.message;
+        } else if (error.message.includes("aborted")) {
+          errorTitle = "Request Cancelled";
+          errorDescription = "The request was cancelled. Please try again.";
+        } else {
+          errorDescription = error.message;
+        }
+      }
+
+      toast({ 
+        title: errorTitle, 
+        description: errorDescription, 
+        variant: "destructive" 
       });
     } finally {
       setIsSubmitting(false);
